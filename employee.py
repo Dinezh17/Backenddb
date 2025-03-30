@@ -26,7 +26,7 @@ from schemas import BulkEvaluationStatusUpdate, EmployeeCreateRequest, EmployeeE
 router = APIRouter()
 from fastapi import HTTPException, status
 
-@router.post("/employees/", response_model=EmployeeResponse)
+@router.post("/employees", response_model=EmployeeResponse)
 def create_employee(
     employee_data: EmployeeCreateRequest, 
     db: Session = Depends(get_db),

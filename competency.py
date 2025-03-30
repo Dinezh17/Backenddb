@@ -1,4 +1,5 @@
 # competencies.py (backend)
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List
@@ -81,3 +82,60 @@ def get_employee_competencies(
         "required_score": comp.required_score,
         "actual_score": comp.actual_score
     } for comp in competencies]
+
+
+
+@router.post("/evaluations")
+def submit_evaluation(
+    evaluation_data: dict,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    # Validate input
+    if not all(key in evaluation_data for key in ["employee_number", "evaluator_id", "scores"]):
+        raise HTTPException(status_code=400, detail="Invalid evaluation data format")
+    
+    employee_number = evaluation_data["employee_number"]
+    evaluator_id = current_user["username"  ]
+    
+    # Check if employee exists
+    employee = db.query(Employee).filter(Employee.employee_number == employee_number).first()
+    if not employee:
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    # Process each competency score
+    for score in evaluation_data["scores"]:
+        if not all(key in score for key in ["competency_code", "actual_score"]):
+            continue
+            
+        # Update or create competency record
+        competency = db.query(EmployeeCompetency).filter(
+            EmployeeCompetency.employee_number == employee_number,
+            EmployeeCompetency.competency_code == score["competency_code"]
+        ).first()
+        
+        if competency:
+            # Update existing record
+            competency.actual_score = score["actual_score"]
+            competency.last_updated = datetime.utcnow()
+            competency.updated_by = evaluator_id
+        else:
+            # Create new record
+            new_competency = EmployeeCompetency(
+                employee_number=employee_number,
+                competency_code=score["competency_code"],
+                required_score=0,  # You might want to get this from somewhere
+                actual_score=score["actual_score"],
+                created_by=evaluator_id,
+                updated_by=evaluator_id
+            )
+            db.add(new_competency)
+    
+    # Update employee evaluation status
+    employee.evaluation_status = True
+    employee.evaluation_by = evaluator_id
+    employee.last_evaluated_date = datetime.utcnow()
+    
+    db.commit()
+    
+    return {"message": "Evaluation submitted successfully"}
