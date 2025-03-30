@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
+from typing import List, Optional
 from datetime import date
 
 class DepartmentBase(BaseModel):
@@ -15,6 +15,9 @@ class DepartmentResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
+
+
 class RoleBase(BaseModel):
     role_code: str
     name: str
@@ -27,6 +30,8 @@ class RoleResponse(RoleBase):
 
     class Config:
         from_attributes = True
+
+
 
 class CompetencyBase(BaseModel):
     code: str
@@ -45,28 +50,12 @@ class CompetencyResponse(BaseModel):
     class Config:
         from_attributes = True
 
-class EmployeeBase(BaseModel):
-    number: str
-    name: str
-    job_code: str
-    reporting_employee_name: str
-    role_id: int
-    department_id: int
 
-class EmployeeCreate(EmployeeBase):
-    pass
 
-class Employee(EmployeeBase):
-    evaluation_status: bool
-    evaluation_by: Optional[str] = None
-    last_evaluated_date: Optional[date] = None
-
-    class Config:
-        from_attributes = True
 
 class RoleCompetencyBase(BaseModel):
-    role_id: int
-    competency_id: int
+    role_code: str
+    code: str
     required_score: int
 
 class RoleCompetencyCreate(RoleCompetencyBase):
@@ -80,23 +69,48 @@ class RoleCompetency(BaseModel):
     class Config:
         from_attributes = True
 
-class EmployeeCompetencyBase(BaseModel):
+
+
+
+
+
+
+
+class EmployeeCreateRequest(BaseModel):
     employee_number: str
-    competency_id: int
-    required_score: int
-    actual_score: int
-
-class EmployeeCompetencyCreate(EmployeeCompetencyBase):
-    pass
-
-class EmployeeCompetency(BaseModel):
+    employee_name: str
+    job_code: str
+    reporting_employee_name: str
+    role_code: str
+    department_id: int
+class EmployeeResponse(BaseModel):
     employee_number: str
-    competency_id: int
-    required_score: int
-    actual_score: int
-
+    employee_name: str
+    job_code: str
+    reporting_employee_name: str
+    role_code: str
+    department_id: int
+    evaluation_status: bool
+    evaluation_by: str | None
+    last_evaluated_date: date | None
+    
     class Config:
         from_attributes = True
+
+
+
+class EmployeeEvaluationStatusUpdate(BaseModel):
+    status: bool
+    evaluated_by: Optional[str] = None
+
+class BulkEvaluationStatusUpdate(BaseModel):
+    employee_numbers: List[str]
+    status: bool
+
+
+
+    
+
 
 class UserCreate(BaseModel):
     username: str
@@ -113,3 +127,5 @@ class TokenData(BaseModel):
     username: str
     role: str
     department_id: int
+
+ 

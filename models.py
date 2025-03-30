@@ -9,7 +9,7 @@ class Department(Base):
 class Role(Base):
     __tablename__ = "roles"
     id = Column(Integer, primary_key=True, index=True)
-    role_code = Column(String , unique=True)
+    role_code = Column(String, unique=True, index=True)
     name = Column(String, unique=True, index=True)
 
 class Competency(Base):
@@ -18,6 +18,20 @@ class Competency(Base):
     code = Column(String, unique=True, index=True)
     name = Column(String)
     description = Column(String)
+
+
+
+
+
+
+class RoleCompetency(Base):
+    __tablename__ = "role_competencies"
+    id = Column(Integer, primary_key=True, index=True)
+    role_code = Column(String, ForeignKey("roles.role_code"))
+    competency_code = Column(String, ForeignKey("competencies.code"))
+    required_score = Column(Integer)
+
+
 
 class Employee(Base):
     __tablename__ = "employees"
@@ -28,23 +42,27 @@ class Employee(Base):
     role_code = Column(String, ForeignKey("roles.role_code"))
     department_id = Column(Integer, ForeignKey("departments.id"))
     evaluation_status = Column(Boolean, default=False)
-    evaluation_by = Column(String)
-    last_evaluated_date = Column(Date)
+    evaluation_by = Column(String, nullable=True)  # Explicitly nullable
+    last_evaluated_date = Column(Date, nullable=True)  # Explicitly nullable
 
-class RoleCompetency(Base):
-    __tablename__ = "role_competencies"
-    id = Column(Integer, primary_key=True, index=True)
-    role_code = Column(Integer, ForeignKey("roles.code"))
-    competency_code = Column(String, ForeignKey("competencies.code"))
-    required_score = Column(Integer)
+
 
 class EmployeeCompetency(Base):
     __tablename__ = "employee_competencies"
-    id = Column(Integer, primary_key=True, index=True)
-    employee_number = Column(String, ForeignKey("employees.number"), primary_key=True)
-    competency_code = Column(Integer, ForeignKey("competencies.code"))
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True,)
+    employee_number = Column(String, ForeignKey("employees.employee_number"))
+    competency_code = Column(String, ForeignKey("competencies.code"))
     required_score = Column(Integer)
     actual_score = Column(Integer)
+
+
+
+
+
+
+
+
+
 
 class User(Base):
     __tablename__ = "users"

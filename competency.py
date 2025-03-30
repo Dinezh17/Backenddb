@@ -5,8 +5,9 @@ from typing import List
 
 from auth import get_current_user
 from database import get_db
-from models import Competency
+from models import Competency, Employee, EmployeeCompetency
 from schemas import CompetencyCreate, CompetencyResponse
+import schemas
 
 router = APIRouter()
 
@@ -55,3 +56,28 @@ def delete_competency(competency_id: int, db: Session = Depends(get_db),current_
     db.delete(competency)
     db.commit()
     return {"message": "Competency deleted successfully"}
+
+
+
+@router.get("/employee-competencies/{employee_number}")
+def get_employee_competencies(
+    employee_number: str,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    if not db.query(Employee).filter(Employee.employee_number == employee_number).first():
+        raise HTTPException(status_code=404, detail="Employee not found")
+    
+    competencies = db.query(
+        EmployeeCompetency.competency_code,
+        EmployeeCompetency.required_score,
+        EmployeeCompetency.actual_score
+    ).filter(
+        EmployeeCompetency.employee_number == employee_number
+    ).all()
+    
+    return [{
+        "code": comp.competency_code,
+        "required_score": comp.required_score,
+        "actual_score": comp.actual_score
+    } for comp in competencies]

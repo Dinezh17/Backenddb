@@ -6,6 +6,7 @@ from database import engine, Base
 import department
 from sqlalchemy.orm import Session
 
+import employee
 import role
 
 app = FastAPI()
@@ -31,6 +32,7 @@ app.include_router(auth.router)
 app.include_router(role.router)
 app.include_router(department.router)
 app.include_router(competency.router)
+app.include_router(employee.router)
 
 
 

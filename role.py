@@ -24,10 +24,15 @@ def create_role(role_data: RoleCreate, db: Session = Depends(get_db), current_us
     db.refresh(new_role)
 
     return new_role
+
+
 @router.get("/roles", response_model=List[RoleResponse])
 def get_all_roles(db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     roles = db.query(Role).all()
     return roles
+
+
+
 @router.get("/roles/{role_id}", response_model=RoleResponse)
 def get_role_by_id(role_id: int, db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)):
     role = db.query(Role).filter(Role.id == role_id).first()
@@ -58,7 +63,32 @@ def delete_role(role_id: int, db: Session = Depends(get_db), current_user: dict 
     return {"message": "Role deleted successfully"}
 
 
-@router.post("roles/{role_code}/competencies", response_model=List[str])
+
+
+
+
+
+
+
+# Get all competencies assigned to a role
+@router.get("/roles/{role_code}/competencies", response_model=List[str])
+def get_role_competencies(
+    role_code: str,
+    db: Session = Depends(get_db)
+):
+    role = db.query(Role).filter(Role.role_code == role_code).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+    
+    assignments = db.query(RoleCompetency.competency_code).filter(
+        RoleCompetency.role_code == role_code
+    ).all()
+    
+    return [a[0] for a in assignments]
+
+
+
+@router.post("/roles/{role_code}/competencies", response_model=List[str])
 def assign_competencies_to_role(
     role_code: str,
     competency_codes: List[str],
@@ -108,3 +138,33 @@ def assign_competencies_to_role(
     
     db.commit()
     return new_codes
+
+
+
+# Remove competencies from a role
+@router.delete("/roles/{role_code}/competencies", response_model=List[str])
+def remove_competencies_from_role(
+    role_code: str,
+    competency_codes: List[str],
+    db: Session = Depends(get_db)
+):
+    # Verify role exists
+    role = db.query(Role).filter(Role.role_code == role_code).first()
+    if not role:
+        raise HTTPException(status_code=404, detail="Role not found")
+
+    # Delete specified assignments
+    result = db.query(RoleCompetency).filter(
+        RoleCompetency.role_code == role_code,
+        RoleCompetency.competency_code.in_(competency_codes)
+    ).delete(synchronize_session=False)
+    
+    db.commit()
+    
+    if result == 0:
+        raise HTTPException(
+            status_code=404,
+            detail="No matching competency assignments found"
+        )
+    
+    return competency_codes
