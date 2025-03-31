@@ -4,6 +4,7 @@ from database import Base
 class Department(Base):
     __tablename__ = "departments"
     id = Column(Integer, primary_key=True, index=True)
+    department_code=Column(String ,unique=True,index=True)
     name = Column(String, unique=True, index=True)
 
 class Role(Base):
@@ -40,7 +41,7 @@ class Employee(Base):
     job_code = Column(String)
     reporting_employee_name = Column(String)
     role_code = Column(String, ForeignKey("roles.role_code"))
-    department_id = Column(Integer, ForeignKey("departments.id"))
+    department_code = Column(Integer, ForeignKey("departments.department_code"))
     evaluation_status = Column(Boolean, default=False)
     evaluation_by = Column(String, nullable=True)  # Explicitly nullable
     last_evaluated_date = Column(Date, nullable=True)  # Explicitly nullable
@@ -64,6 +65,7 @@ class EmployeeCompetency(Base):
 
 
 
+
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
@@ -71,4 +73,4 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
     role = Column(String)  # HR or HOD
-    department_id = Column(Integer, ForeignKey("departments.id"))
+    department_code = Column(Integer, ForeignKey("departments.department_code"))

@@ -12,7 +12,7 @@ def create_department(department: DepartmentCreate, db: Session = Depends(get_db
     if existing_department:
         raise HTTPException(status_code=400, detail="Department already exists")
 
-    new_department = Department(name=department.name)
+    new_department = Department(department_code = department.department_code,name=department.name)
     db.add(new_department)
     db.commit()
     db.refresh(new_department)
@@ -24,20 +24,21 @@ def get_departments(db: Session = Depends(get_db)):
     return db.query(Department).all()
 
 
-@router.put("/departments/{department_id}", response_model=DepartmentResponse)
-def update_department(department_id: int, department_data: DepartmentCreate, db: Session = Depends(get_db)):
-    department = db.query(Department).filter(Department.id == department_id).first()
+@router.put("/departments/{department_code}", response_model=DepartmentResponse)
+def update_department(department_code: str, department_data: DepartmentCreate, db: Session = Depends(get_db)):
+    department = db.query(Department).filter(Department.department_code== department_code).first()
     if not department:
         raise HTTPException(status_code=404, detail="Department not found")
-
+    department.department_code = department_data.department_code
     department.name = department_data.name
     db.commit()
     db.refresh(department)
 
     return department
-@router.delete("/departments/{department_id}", response_model=dict)
-def delete_department(department_id: int, db: Session = Depends(get_db)):
-    department = db.query(Department).filter(Department.id == department_id).first()
+
+@router.delete("/departments/{department_code}", response_model=dict)
+def delete_department(department_code: str, db: Session = Depends(get_db)):
+    department = db.query(Department).filter(Department.department_code== department_code).first()
     if not department:
         raise HTTPException(status_code=404, detail="Department not found")
 

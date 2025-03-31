@@ -3,6 +3,7 @@ from typing import List, Optional
 from datetime import date
 
 class DepartmentBase(BaseModel):
+    department_code:str
     name: str
 
 class DepartmentCreate(DepartmentBase):
@@ -10,6 +11,7 @@ class DepartmentCreate(DepartmentBase):
 
 class DepartmentResponse(BaseModel):
     id: int
+    department_code:str
     name: str
 
     class Config:
@@ -82,14 +84,14 @@ class EmployeeCreateRequest(BaseModel):
     job_code: str
     reporting_employee_name: str
     role_code: str
-    department_id: int
+    department_code: str
 class EmployeeResponse(BaseModel):
     employee_number: str
     employee_name: str
     job_code: str
     reporting_employee_name: str
     role_code: str
-    department_id: int
+    department_code: str
     evaluation_status: bool
     evaluation_by: str | None
     last_evaluated_date: date | None
@@ -117,7 +119,7 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: str
-    department_id: int
+    department_code: str
 
 class UserLogin(BaseModel):
     email: EmailStr

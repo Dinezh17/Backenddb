@@ -1,4 +1,3 @@
-# competencies.py (backend)
 from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -13,40 +12,59 @@ import schemas
 router = APIRouter()
 
 @router.post("/competency", response_model=CompetencyResponse)
-def create_competency(competency: CompetencyCreate, db: Session = Depends(get_db),current_user: dict = Depends(get_current_user)):
-    # Check if competency code already exists
+def create_competency(
+    competency: CompetencyCreate, 
+    db: Session = Depends(get_db), 
+    # current_user: dict = Depends(get_current_user)
+):
+    # Checking if competency already exists
     db_competency = db.query(Competency).filter(Competency.code == competency.code).first()
     if db_competency:
         raise HTTPException(status_code=400, detail="Competency code already exists")
     
-    new_competency = Competency(**competency.model_dump())
+    new_competency = Competency(
+        code=competency.code,
+        name=competency.name,
+        description=competency.description
+    )
+    
     db.add(new_competency)
     db.commit()
     db.refresh(new_competency)
+    
     return new_competency
+
 
 @router.get("/competency", response_model=List[CompetencyResponse])
 def get_all_competencies(db: Session = Depends(get_db),current_user: dict = Depends(get_current_user)):
     return db.query(Competency).all()
 
+
 @router.put("/competency/{competency_id}", response_model=CompetencyResponse)
-def update_competency(competency_id: int, competency: CompetencyCreate, db: Session = Depends(get_db),current_user: dict = Depends(get_current_user)):
+def update_competency(
+    competency_id: int, 
+    competency: CompetencyCreate, 
+    db: Session = Depends(get_db), 
+    current_user: dict = Depends(get_current_user)
+):
     db_competency = db.query(Competency).filter(Competency.id == competency_id).first()
     if not db_competency:
         raise HTTPException(status_code=404, detail="Competency not found")
      
-    # Check if new code conflicts with existing competencies
     if competency.code != db_competency.code:
         existing_code = db.query(Competency).filter(Competency.code == competency.code).first()
         if existing_code:
             raise HTTPException(status_code=400, detail="Competency code already exists")
     
-    for key, value in competency.model_dump().items():
-        setattr(db_competency, key, value)
-    
+    db_competency.code = competency.code
+    db_competency.name = competency.name
+    db_competency.description = competency.description
+
     db.commit()
     db.refresh(db_competency)
+    
     return db_competency
+
 
 @router.delete("/competency/{competency_id}")
 def delete_competency(competency_id: int, db: Session = Depends(get_db),current_user: dict = Depends(get_current_user)):
@@ -96,7 +114,7 @@ def submit_evaluation(
         raise HTTPException(status_code=400, detail="Invalid evaluation data format")
     
     employee_number = evaluation_data["employee_number"]
-    evaluator_id = current_user["username"  ]
+    evaluator_id = current_user["username"]
     
     # Check if employee exists
     employee = db.query(Employee).filter(Employee.employee_number == employee_number).first()
