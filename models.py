@@ -19,6 +19,8 @@ class Competency(Base):
     code = Column(String, unique=True, index=True)
     name = Column(String)
     description = Column(String)
+    required_score = Column(Integer)
+    
 
 
 
@@ -41,7 +43,7 @@ class Employee(Base):
     job_code = Column(String)
     reporting_employee_name = Column(String)
     role_code = Column(String, ForeignKey("roles.role_code"))
-    department_code = Column(Integer, ForeignKey("departments.department_code"))
+    department_code = Column(String, ForeignKey("departments.department_code"))
     evaluation_status = Column(Boolean, default=False)
     evaluation_by = Column(String, nullable=True)  # Explicitly nullable
     last_evaluated_date = Column(Date, nullable=True)  # Explicitly nullable

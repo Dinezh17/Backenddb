@@ -39,6 +39,7 @@ class CompetencyBase(BaseModel):
     code: str
     name: str
     description: Optional[str] = None
+    required_score:int
 
 class CompetencyCreate(CompetencyBase):
     pass
@@ -47,6 +48,7 @@ class CompetencyResponse(BaseModel):
     id: int
     code: str
     name: str
+    required_score:int
     description: Optional[str] = None
 
     class Config:

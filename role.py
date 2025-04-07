@@ -87,7 +87,6 @@ def get_role_competencies(
     return [a[0] for a in assignments]
 
 
-
 @router.post("/roles/{role_code}/competencies", response_model=List[str])
 def assign_competencies_to_role(
     role_code: str,
@@ -112,12 +111,12 @@ def assign_competencies_to_role(
     if not new_codes:
         return []  # No new assignments needed
 
-    # 4. Verify competencies exist
-    existing_competencies = db.query(Competency.code).filter(
+    # 4. Verify competencies exist and get their required scores
+    competencies = db.query(Competency.code, Competency.required_score).filter(
         Competency.code.in_(new_codes)
     ).all()
-    existing_competency_codes = {c[0] for c in existing_competencies}
     
+    existing_competency_codes = {c[0] for c in competencies}
     missing = new_codes - existing_competency_codes
     if missing:
         raise HTTPException(
@@ -125,19 +124,20 @@ def assign_competencies_to_role(
             detail=f"Competencies not found: {', '.join(missing)}"
         )
 
-    # 5. Create new assignments (all with score=3)
-    
+    # Create a dictionary of code to required_score
+    competency_scores = {c.code: c.required_score for c in competencies}
+
+    # 5. Create new assignments with the correct required_score
     for code in new_codes:
         rc = RoleCompetency(
             role_code=role_code,
             competency_code=code,
-            required_score=3  # Fixed score
+            required_score=competency_scores[code]
         )
         db.add(rc)
-     
     
     db.commit()
-    return new_codes
+    return list(new_codes)
 
 
 

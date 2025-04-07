@@ -149,7 +149,7 @@ def update_employee(
 def delete_employee(
     employee_number: str,
     db: Session = Depends(get_db),
-    # current_user: dict = Depends(get_current_user)
+    #current_user: dict = Depends(get_current_user)
 ):
     try:
 
