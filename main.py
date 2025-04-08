@@ -5,10 +5,10 @@ import competency
 from database import engine, Base
 import department
 from sqlalchemy.orm import Session
+import stats
 
 import employee
 import role
-
 app = FastAPI()
 origins = [
     "http://localhost:5173",  # React app running on Vite
@@ -33,7 +33,7 @@ app.include_router(role.router)
 app.include_router(department.router)
 app.include_router(competency.router)
 app.include_router(employee.router)
-
+app.include_router(stats.router)
 
 
     
