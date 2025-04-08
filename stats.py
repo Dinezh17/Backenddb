@@ -2,6 +2,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
+from auth import get_current_user
 from database import get_db
 from models import Department, Employee, EmployeeCompetency, Competency, RoleCompetency
 
@@ -126,3 +127,75 @@ def get_analytics_dashboard(db: Session = Depends(get_db)):
         "departmentData": department_data,
         "competencyData": competency_data
     }
+
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+from database import get_db
+from models import Competency, EmployeeCompetency
+
+
+@router.get("/by-competency")
+def get_competency_gap_data(db: Session = Depends(get_db)):
+    competencies = db.query(Competency).all()
+    result = []
+
+    for comp in competencies:
+        gap1 = 0
+        gap2 = 0
+        gap3 = 0
+
+        # Get all employee competencies for this competency
+        records = db.query(EmployeeCompetency).filter(
+            EmployeeCompetency.competency_code == comp.code
+        ).all()
+
+        for record in records:
+            if record.required_score is not None and record.actual_score is not None:
+                gap = record.required_score - record.actual_score
+                if gap == 1:
+                    gap1 += 1
+                elif gap == 2:
+                    gap2 += 1
+                elif gap == 3:
+                    gap3 += 1
+
+        result.append({
+            "competencyCode": comp.code,
+            "competencyName": comp.name,
+            "gap1": gap1,
+            "gap2": gap2,
+            "gap3": gap3,
+            "totalGapEmployees": gap1 + gap2 + gap3
+        })
+
+    return result
+
+
+
+
+@router.get("/details/by-competency/{compcode}")
+def get_employee_gaps_by_competency(
+    compcode: str,
+    db: Session = Depends(get_db),current_user: dict = Depends(get_current_user)
+):
+    records = db.query(EmployeeCompetency).filter(
+        EmployeeCompetency.competency_code == compcode
+    ).all()
+
+    result = []
+
+    for rec in records:
+        if rec.required_score is not None and rec.actual_score is not None:
+            gap = rec.required_score - rec.actual_score
+            if gap > 0:
+                result.append({
+                    "employeeNumber": rec.employee_number,
+                    "requiredScore": rec.required_score,
+                    "actualScore": rec.actual_score,
+                    "gap": gap
+                })
+
+    # Sort by descending gap
+    result.sort(key=lambda x: x["gap"], reverse=True)
+
+    return result
