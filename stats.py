@@ -176,7 +176,8 @@ def get_competency_gap_data(db: Session = Depends(get_db)):
 @router.get("/details/by-competency/{compcode}")
 def get_employee_gaps_by_competency(
     compcode: str,
-    db: Session = Depends(get_db),current_user: dict = Depends(get_current_user)
+    db: Session = Depends(get_db)
+    # ,current_user: dict = Depends(get_current_user)
 ):
     records = db.query(EmployeeCompetency).filter(
         EmployeeCompetency.competency_code == compcode

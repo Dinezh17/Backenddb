@@ -6,7 +6,7 @@ from typing import List
 from auth import get_current_user
 from database import get_db
 from models import Competency, Department, Employee, EmployeeCompetency
-from schemas import CompetencyCreate, CompetencyResponse
+from schemas import CompetencyCreate, CompetencyResponse, EmployeeCompetencyResponse
 import schemas
 
 router = APIRouter()
@@ -166,89 +166,10 @@ def submit_evaluation(
 
 
 
-
-
-
-
-from collections import defaultdict
-from sqlalchemy import func
-
-@router.get("/analytics/employee-metrics")
-def get_employee_metrics(
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user)
+@router.get("/employee-competencies", response_model=List[EmployeeCompetencyResponse])
+def get_all_employee_competencies(
+    db: Session = Depends(get_db)
+    # current_user: dict = Depends(get_current_user)
 ):
-    try:
-        # Total employee count
-        total_employees = db.query(func.count(Employee.employee_number)).scalar()
+    return db.query(EmployeeCompetency).all()
 
-        # Employees by department
-        department_counts = db.query(
-            Department.name.label("department"),
-            func.count(Employee.employee_number).label("count")
-        ).join(
-            Employee, Employee.department_code == Department.department_code
-        ).group_by(
-            Department.name
-        ).all()
-
-        # Competency overview (example - you might need to adjust based on your business logic)
-        competency_overview = db.query(
-            func.avg(EmployeeCompetency.actual_score).label("avg_score"),
-            func.count(EmployeeCompetency.id).label("count"),
-            Competency.name
-        ).join(
-            Competency, EmployeeCompetency.competency_code == Competency.code
-        ).group_by(
-            Competency.name
-        ).all()
-
-        # Format competency data for pie chart
-        competency_data = [{
-            "name": item.name,
-            "value": round(float(item.avg_score), 2)
-        } for item in competency_overview]
-
-        # Low-performing employees (example criteria - adjust as needed)
-        low_performers = db.query(Employee).join(
-            EmployeeCompetency, Employee.employee_number == EmployeeCompetency.employee_number
-        ).group_by(
-            Employee.employee_number
-        ).having(
-            func.avg(EmployeeCompetency.actual_score) < func.avg(EmployeeCompetency.required_score) * 0.7
-        ).all()
-
-        # High-potential employees (example criteria - adjust as needed)
-        high_potential = db.query(Employee).join(
-            EmployeeCompetency, Employee.employee_number == EmployeeCompetency.employee_number
-        ).group_by(
-            Employee.employee_number
-        ).having(
-            func.avg(EmployeeCompetency.actual_score) > func.avg(EmployeeCompetency.required_score) * 1.3
-        ).all()
-
-        # Promotion-ready employees (example criteria - adjust as needed)
-        promotion_ready = db.query(Employee).join(
-            EmployeeCompetency, Employee.employee_number == EmployeeCompetency.employee_number
-        ).group_by(
-            Employee.employee_number
-        ).having(
-            func.avg(EmployeeCompetency.actual_score) >= func.avg(EmployeeCompetency.required_score)
-        ).filter(
-            Employee.evaluation_status == True
-        ).all()
-
-        return {
-            "totalEmployees": total_employees,
-            "departmentCounts": [{"department": d.department, "count": d.count} for d in department_counts],
-            "competencyOverview": competency_data,
-            "lowPerformers": low_performers,
-            "highPotential": high_potential,
-            "promotionReady": promotion_ready
-        }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error generating analytics: {str(e)}"
-        )

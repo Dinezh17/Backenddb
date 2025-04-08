@@ -76,7 +76,15 @@ class RoleCompetency(BaseModel):
 
 
 
+class EmployeeCompetencyResponse(BaseModel):
+    id: int
+    employee_number: str
+    competency_code: str
+    required_score: int
+    actual_score: Optional[int]  # 👈 make this optional
 
+    class Config:
+        orm_mode = True
 
 
 
