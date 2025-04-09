@@ -192,14 +192,14 @@ def get_all_employees(
         if(current_user["role"]=="HR"):
 
             employees = db.query(Employee).all()
-            print(employees)
+           
             return employees
         else:
             print()
             employees = db.query(Employee).filter(
             Employee.department_code == current_user["department_code"]
         ).all()
-            print(employees)
+            
             return employees
 
     except Exception as e:

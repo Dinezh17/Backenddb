@@ -73,7 +73,7 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         user = db.query(User).filter(User.username == username).first()
         if user is None:
             raise HTTPException(status_code=401, detail="User not found")
-        print("called jwt auth")
+       
         return {"username": username, "role": role, "department_code": department_code}
 
     except JWTError:
