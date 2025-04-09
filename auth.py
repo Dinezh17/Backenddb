@@ -77,5 +77,11 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         return {"username": username, "role": role, "department_code": department_code}
 
     except JWTError:
-        # raise HTTPException(status_code=403, detail="Could not validate credentials")
-        raise HTTPException(status_code=403, detail="Could not validate credentials")
+        raise HTTPException(
+            status_code=401,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    # except JWTError:
+    #     raise HTTPException(status_code=403, detail="Could not validate credentials")
